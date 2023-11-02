@@ -43,10 +43,8 @@ function PollWiseContent() {
             { text: "Option 4", count: 11 },
           ],
         },
-        // Add more questions here if needed
       ],
     },
-    // Add more quizzes here if needed
   ];
 
   return (

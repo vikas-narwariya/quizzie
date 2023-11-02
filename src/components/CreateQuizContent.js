@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { BACKEND_URL } from "../config";
 
 function CreateQuizContent({
   isOpen,
@@ -16,7 +17,7 @@ function CreateQuizContent({
     const token = localStorage.getItem("userToken");
     handleCreateQuestion();
     const res = await axios.post(
-      "http://localhost:5000/api/quizzes",
+      `${BACKEND_URL}/quizzes`,
       { title, type: quizType },
       {
         headers: { Authorization: `Bearer ${token}` },

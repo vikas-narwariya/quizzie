@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { BACKEND_URL } from "../config";
 function DashboardContent() {
   const [data, setData] = useState();
   const [loading, setLoading] = useState();
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     axios
-      .get(`http://localhost:5000/api/stats`, {
+      .get(`${BACKEND_URL}/stats`, {
         headers: { Authorization: `Bearer ${token}` },
-      }) // Replace with your actual API endpoint
+      })
       .then((response) => {
         setData(response.data);
       })

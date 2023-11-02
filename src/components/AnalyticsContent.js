@@ -4,34 +4,31 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { BACKEND_URL } from "../config";
 
-function AnalyticsContent() {
+function AnalyticsContent({ quiz, onDelete }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [data, setData] = useState();
   const [loading, setLoading] = useState();
+  const [quizId, setQuizId] = useState("");
+  const [deleted, setDeleted] = useState(false);
+  const token = localStorage.getItem("userToken");
+  const [itemToDelete, setItemToDelete] = useState(null);
 
-  const handleDelete = () => {
-    // Add your delete logic here
-    alert("Item deleted");
-    setIsModalOpen(false);
-  };
-
-  const handleOpenModal = () => {
+  const handleOpenModal = (itemId) => {
+    setItemToDelete(itemId);
     setIsModalOpen(true);
   };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
 
   const notify = () => toast.success("Link copied to Clipboard");
   useEffect(() => {
-    const token = localStorage.getItem("userToken");
     axios
-      .get(`http://localhost:5000/api/quizzes`, {
+      .get(`${BACKEND_URL}/quizzes`, {
         headers: { Authorization: `Bearer ${token}` },
-      }) // Replace with your actual API endpoint
+      })
       .then((response) => {
         setData(response.data);
       })
@@ -40,21 +37,47 @@ function AnalyticsContent() {
         setLoading(false);
       });
   }, []);
+  console.log(data);
 
   useEffect(() => {
-    const token = localStorage.getItem("userToken");
-    axios
-      .get(`http://localhost:5000/api/quizzes/read/quizId`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }) // Replace with your actual API endpoint
-      .then((response) => {
-        setData(response.data);
-      })
-      .catch((error) => {
-        console.error("API request failed", error);
-        setLoading(false);
-      });
-  }, []);
+    if (quizId) {
+      axios
+        .get(`${BACKEND_URL}/quizzes/read/${quizId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          setData(response.data);
+        })
+        .catch((error) => {
+          console.error("API request failed", error);
+          setLoading(false);
+        });
+    }
+  }, [quizId]);
+
+  const handleDelete = async (quizId) => {
+    setIsModalOpen(true);
+    try {
+      const response = await axios.delete(
+        `http://localhost:5000/quizzes/${quizId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.status === 204) {
+        onDelete(quizId);
+      } else {
+        console.error(
+          "Quiz deletion failed. Server response:",
+          response.status,
+          response.data
+        );
+      }
+    } catch (error) {
+      console.error("Quiz deletion failed", error);
+    }
+  };
 
   return (
     <div className="content">
@@ -99,7 +122,10 @@ function AnalyticsContent() {
                     </svg>
                   </span>
                   <span>
-                    <button onClick={handleOpenModal} className="btn-delete">
+                    <button
+                      onClick={() => handleOpenModal(item._id)}
+                      className="btn-delete"
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="24"
@@ -115,7 +141,7 @@ function AnalyticsContent() {
                     </button>
                     <DeleteConfirmationModal
                       isOpen={isModalOpen}
-                      onDelete={handleDelete}
+                      onDelete={() => handleDelete(itemToDelete)}
                       onClose={handleCloseModal}
                     />
                   </span>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import QuizPublish from "./QuizPublish";
 import axios from "axios";
+import { BACKEND_URL } from "../config";
 
 function CreateQuestionContent({
   isOpen,
@@ -62,20 +63,6 @@ function CreateQuestionContent({
         return [...prev, newQuestion];
       });
       handleReset();
-      // const token = localStorage.getItem("userToken");
-      // await axios.post(
-      //   "http://localhost:5000/api/questions",
-      //   {
-      //     text: questionText,
-      //     options,
-      //     timer: intervalTime,
-      //     selectedOption,
-      //     quizId,
-      //   },
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   }
-      // );
     } else {
       alert("Maximum limit of 5 questions reached.");
     }
@@ -105,7 +92,6 @@ function CreateQuestionContent({
 
   const handleDeleteQuestion = (id) => {
     if (questions.length <= 1) {
-      // Ensure that at least one question remains
       return;
     }
     setCurrentQuestion((prev) => {
@@ -135,7 +121,7 @@ function CreateQuestionContent({
     handleCreateQuiz();
     const token = localStorage.getItem("userToken");
     await axios.post(
-      "http://localhost:5000/api/questions",
+      `${BACKEND_URL}/questions`,
       {
         text: questionText,
         options,

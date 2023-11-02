@@ -22,10 +22,7 @@ function Sidebar() {
   const [isCreateQuizOpen, setCreateQuizOpen] = useState(false);
   const [quizId, setQuizId] = useState("");
 
-  const handleDelete = () => {
-    alert("Item deleted");
-    setIsModalOpen(false);
-  };
+  const handleDelete = (quizId) => {};
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -53,6 +50,12 @@ function Sidebar() {
   const handleCloseCreateQuiz = () => {
     setCreateQuizOpen(false);
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    navigate("/");
+  };
+
   return (
     <div>
       {" "}
@@ -62,7 +65,11 @@ function Sidebar() {
           <button className="sidebar-button" onClick={navigateToDashboard}>
             Dashboard
           </button>
-          <button className="sidebar-button" onClick={navigateToAnalytics}>
+          <button
+            className="sidebar-button"
+            onClick={navigateToAnalytics}
+            onDelete={handleDelete}
+          >
             Analytics
           </button>
           <button className="sidebar-button" onClick={handleOpenModal}>
@@ -92,10 +99,11 @@ function Sidebar() {
         </div>
         <div className="">
           <hr />
-          <button className="sidebar-button">Logout</button>
+          <button className="sidebar-button" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </div>
-      <div className="content">{/* Your main content goes here */}</div>
     </div>
   );
 }

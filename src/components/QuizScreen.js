@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { BACKEND_URL } from "../config";
 
 function formatTime(seconds) {
   const minutes = Math.floor(seconds / 60);
@@ -26,9 +27,8 @@ function QuizScreen() {
 
   useEffect(() => {
     console.log(quizId);
-    // Make an API request to your backend when the component mounts
     axios
-      .get(`http://localhost:5000/api/quizzes/${quizId}`) // Replace with your actual API endpoint
+      .get(`${BACKEND_URL}/quizzes/${quizId}`)
       .then((response) => {
         setData(response.data);
       })
@@ -42,7 +42,7 @@ function QuizScreen() {
   useEffect(() => {
     if (Object.keys(data).length === 0) return;
     axios
-      .get(`http://localhost:5000/api/questions/${data.quizImpression._id}`) // Replace with your actual API endpoint
+      .get(`${BACKEND_URL}/questions/${data.quizImpression._id}`)
       .then((response) => {
         setQuestions(response.data);
         setLoading(false);
@@ -80,7 +80,7 @@ function QuizScreen() {
     if (showThankYou) {
       if (userAnswers.length > 0) {
         axios
-          .post("http://localhost:5000/api/quizzes/check-answer", {
+          .post(`${BACKEND_URL}/quizzes/check-answer`, {
             chooseAnswers: userAnswers,
             quizId,
           })
@@ -124,7 +124,7 @@ function QuizScreen() {
               <h1 className="quiz-num">
                 {currentQuestionIndex + 1}/{questions.length}
               </h1>
-              {questions[currentQuestionIndex].timer !== null && (
+              {questions[currentQuestionIndex].timer > 0 && (
                 <h1 className="quiz-timer">{formatTime(remainingTime)}s</h1>
               )}
             </div>
@@ -135,23 +135,25 @@ function QuizScreen() {
               <div className="quiz-option-cards">
                 {questions[currentQuestionIndex].options.map(
                   (option, index) => (
-                    <div
-                      key={index}
-                      className={`quiz-option-card ${
-                        userAnswer.id === option._id &&
-                        "quiz-option-card-active"
-                      }`}
-                      onClick={() =>
-                        setUserAnswer({
-                          questionId: questions[currentQuestionIndex]._id,
-                          id: option._id,
-                        })
-                      }
-                    >
-                      {option.image && (
-                        <img src={option.image} alt={`Option ${index + 1}`} />
-                      )}
-                      {option.text && <div>{option.text}</div>}
+                    <div className="quiz-option-card1">
+                      <div
+                        key={index}
+                        className={`quiz-option-card ${
+                          userAnswer.id === option._id &&
+                          "quiz-option-card-active"
+                        }`}
+                        onClick={() =>
+                          setUserAnswer({
+                            questionId: questions[currentQuestionIndex]._id,
+                            id: option._id,
+                          })
+                        }
+                      >
+                        {option.image && (
+                          <img src={option.image} alt={`Option ${index + 1}`} />
+                        )}
+                        {option.text && <div>{option.text}</div>}
+                      </div>
                     </div>
                   )
                 )}
