@@ -279,7 +279,8 @@
 
 .q-trend-card {
   width: 181px;
-  height: 62px;
+  height: auto;
+  padding: 10px;
   border-radius: 5px;
   background: #fff;
   text-align: center;
@@ -822,6 +823,11 @@ table {
   color: #fff;
 }
 
+.q-timer-wrap-active {
+  background: #d60000;
+  color: #fff;
+}
+
 .q-options-wrap {
   display: flex;
   justify-content: space-between;
@@ -898,8 +904,9 @@ table {
 }
 
 .quiz-option-card {
+  max-width: 100%;
   width: 320px;
-  height: 112px;
+  height: auto;
   border-radius: 10px;
   background: #f0f0f0;
   color: #000;
@@ -911,7 +918,8 @@ table {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 5px;
+  margin-bottom: 10px;
+  padding: 19px 21px;
 }
 
 .quiz-option-card1 {
@@ -1089,4 +1097,20 @@ table {
 
 .form-col input:invalid {
   border: 1px solid #d60000;
+}
+
+.img-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.option-img {
+  max-height: 121px !important;
+  max-width: 136px !important;
+
+  width: 136px;
+  object-fit: contain;
+  border-radius: 10px;
 }

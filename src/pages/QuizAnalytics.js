@@ -3,7 +3,9 @@ import QuestionWiseContent from "../components/QuestionWiseContent";
 import PollWiseContent from "../components/PollWiseContent";
 import MainLayout from "../components/MainLayout";
 
-function YourParentComponent({ type }) {
+function QuizAnalytics() {
+  const type = window.location.search.split("type=")[1];
+  // console.log(window.location.search.split("type="));
   return (
     <MainLayout>
       {type === "Q&A" ? <QuestionWiseContent /> : null}
@@ -12,4 +14,4 @@ function YourParentComponent({ type }) {
   );
 }
 
-export default YourParentComponent;
+export default QuizAnalytics;

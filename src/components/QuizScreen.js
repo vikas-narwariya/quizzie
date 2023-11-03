@@ -149,10 +149,16 @@ function QuizScreen() {
                           })
                         }
                       >
-                        {option.image && (
-                          <img src={option.image} alt={`Option ${index + 1}`} />
-                        )}
-                        {option.text && <div>{option.text}</div>}
+                        <div className="img-text">
+                          {option.optionText && <div>{option.optionText}</div>}
+                          {option.optionImage && (
+                            <img
+                              src={option.optionImage}
+                              alt={`Option ${index + 1}`}
+                              className="option-img"
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   )
@@ -174,7 +180,7 @@ function QuizScreen() {
 }
 
 function ThankYouScreen({ score, totalQuestions, data }) {
-  return data.quizType === "Poll" ? (
+  return data.type === "Poll" ? (
     <div className="quiz-question-wrap">
       <h1 className="poll-congrats-text">
         Thank you for participating in the Poll

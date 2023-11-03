@@ -4,27 +4,67 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { BACKEND_URL } from "../config";
+import { BACKEND_URL, FRONTEND_URL } from "../config";
+import CreateQuestionContent from "./CreateQuestionContent";
 
-function AnalyticsContent({ quiz, onDelete }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+function AnalyticsContent({ quiz }) {
+  const [isModalOpenDelete, setIsModalOpenDelete] = useState(false);
   const [data, setData] = useState();
   const [loading, setLoading] = useState();
   const [quizId, setQuizId] = useState("");
   const [deleted, setDeleted] = useState(false);
   const token = localStorage.getItem("userToken");
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleOpenModal = (itemId) => {
-    setItemToDelete(itemId);
+  const [isCreateQuestionModalOpen, setIsCreateQuestionModalOpen] =
+    useState(false);
+  const [selectedQuizType, setSelectedQuizType] = useState(null);
+  const [isCreateQuizOpen, setCreateQuizOpen] = useState(false);
+  const [update, setUpdate] = useState(false);
+
+  const handleOpenModal = () => {
     setIsModalOpen(true);
   };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
 
-  const notify = () => toast.success("Link copied to Clipboard");
-  useEffect(() => {
+  const handleCreateQuestionOpenModal = (quizId) => {
+    setIsCreateQuestionModalOpen(true);
+    setQuizId(quizId);
+  };
+
+  const handleCreateQuestionCloseModal = () => {
+    setIsCreateQuestionModalOpen(false);
+  };
+
+  const handleSelectQuizType = (quizType) => {
+    setSelectedQuizType(quizType);
+  };
+
+  const handleOpenCreateQuiz = () => {
+    setCreateQuizOpen(true);
+  };
+  const handleCloseCreateQuiz = () => {
+    setCreateQuizOpen(false);
+  };
+
+  const handleOpenDeleteModal = (itemId) => {
+    setItemToDelete(itemId);
+    setIsModalOpenDelete(true);
+  };
+  const handleCloseDeleteModal = () => {
+    setIsModalOpenDelete(false);
+  };
+
+  const copyLink = (quizId) => {
+    navigator.clipboard.writeText(`${FRONTEND_URL}/quiz/${quizId}`);
+    toast.success("Link copied to Clipboard");
+  };
+
+  const getQuizzes = () => {
     axios
       .get(`${BACKEND_URL}/quizzes`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -36,11 +76,20 @@ function AnalyticsContent({ quiz, onDelete }) {
         console.error("API request failed", error);
         setLoading(false);
       });
+  };
+
+  const handleEditQuestion = (quizId) => {
+    handleCreateQuestionOpenModal(quizId);
+    setUpdate(true);
+  };
+
+  useEffect(() => {
+    getQuizzes();
   }, []);
   console.log(data);
 
   useEffect(() => {
-    if (quizId) {
+    if (quizId && !update) {
       axios
         .get(`${BACKEND_URL}/quizzes/read/${quizId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -56,17 +105,13 @@ function AnalyticsContent({ quiz, onDelete }) {
   }, [quizId]);
 
   const handleDelete = async (quizId) => {
-    setIsModalOpen(true);
+    setIsModalOpenDelete(true);
     try {
-      const response = await axios.delete(
-        `http://localhost:5000/quizzes/${quizId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.delete(`${BACKEND_URL}/quizzes/${quizId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (response.status === 204) {
-        onDelete(quizId);
       } else {
         console.error(
           "Quiz deletion failed. Server response:",
@@ -74,6 +119,8 @@ function AnalyticsContent({ quiz, onDelete }) {
           response.data
         );
       }
+      setIsModalOpenDelete(false);
+      getQuizzes();
     } catch (error) {
       console.error("Quiz deletion failed", error);
     }
@@ -106,7 +153,7 @@ function AnalyticsContent({ quiz, onDelete }) {
                 </td>
                 <td>{item.impressionCount}</td>
                 <td className="icon-btn">
-                  <span>
+                  <span onClick={() => handleEditQuestion(item._id)}>
                     {" "}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -123,7 +170,7 @@ function AnalyticsContent({ quiz, onDelete }) {
                   </span>
                   <span>
                     <button
-                      onClick={() => handleOpenModal(item._id)}
+                      onClick={() => handleOpenDeleteModal(item._id)}
                       className="btn-delete"
                     >
                       <svg
@@ -140,13 +187,16 @@ function AnalyticsContent({ quiz, onDelete }) {
                       </svg>
                     </button>
                     <DeleteConfirmationModal
-                      isOpen={isModalOpen}
+                      isOpen={isModalOpenDelete}
                       onDelete={() => handleDelete(itemToDelete)}
-                      onClose={handleCloseModal}
+                      onClose={handleCloseDeleteModal}
                     />
                   </span>
                   <span>
-                    <button onClick={notify} className="btn-copy">
+                    <button
+                      onClick={() => copyLink(item._id)}
+                      className="btn-copy"
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="24"
@@ -164,7 +214,10 @@ function AnalyticsContent({ quiz, onDelete }) {
                   </span>
                 </td>
                 <td>
-                  <Link to={`/analytics/${item._id}`}>
+                  <Link
+                    to={`/analytics/${item._id}?type=${item.type}`}
+                    style={{ textDecoration: "none", color: "#000" }}
+                  >
                     Question wise Analysis
                   </Link>
                 </td>
@@ -173,6 +226,13 @@ function AnalyticsContent({ quiz, onDelete }) {
           </tbody>
         </table>
       </div>
+      <CreateQuestionContent
+        isOpen={isCreateQuestionModalOpen}
+        onClose={handleCreateQuestionCloseModal}
+        quizType={selectedQuizType}
+        handleCreateQuiz={handleOpenCreateQuiz}
+        quizId={quizId}
+      />
     </div>
   );
 }

@@ -13,8 +13,8 @@ function CreateQuestionContent({
 }) {
   const [selectedOption, setSelectedOption] = useState("text");
   const [options, setOptions] = useState([
-    { seq: 1, isCorrect: false },
-    { seq: 2, isCorrect: false },
+    { seq: 1, isCorrect: false, optionText: "", optionImage: "" },
+    { seq: 2, isCorrect: false, optionText: "", optionImage: "" },
   ]);
 
   const [questions, setQuestions] = useState([
@@ -22,7 +22,7 @@ function CreateQuestionContent({
       questionText: "",
       options: [],
       intervalTime: 0,
-      optionCategory: "text",
+      selectedOption: "text",
       seq: 1,
     },
   ]);
@@ -30,14 +30,43 @@ function CreateQuestionContent({
   const [intervalTime, setIntervalTime] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState([1]);
   const [selectQuestion, setSelectQuestion] = useState(1);
+  const [optionText, setOptionText] = useState("");
+  const [optionImage, setOptionImage] = useState("");
+  // const [optionTextImage, setOptionTextImage] = useState();
+  const [correctAnswer, setCorrectAnswer] = useState([null]);
+  const [correctAnswers, setCorrectAnswers] = useState([]);
 
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
+    // setOptions([
+    //   { seq: 1, isCorrect: false, optionText: "", optionImage: "" },
+    //   { seq: 2, isCorrect: false, optionText: "", optionImage: "" },
+    // ]);
+    setOptions((prevOptions) => {
+      return prevOptions.map((opt) => {
+        return {
+          ...opt,
+          //   isCorrect: false, // Clear all previous correct answers
+          isCorrect: opt.seq === correctAnswer,
+        };
+      });
+    });
+    setCorrectAnswer(null);
   };
 
   const handleAddOption = () => {
     if (options.length >= 4) return;
-    setOptions([...options, { seq: options.length + 1, isCorrect: false }]);
+    setOptions([
+      ...options,
+      {
+        seq: options.length + 1,
+        isCorrect: false,
+        optionText: "",
+        optionImage: "",
+      },
+    ]);
+    setOptionText("");
+    setOptionImage("");
   };
 
   const handleDeleteOption = (id) => {
@@ -50,11 +79,16 @@ function CreateQuestionContent({
 
   const handleAddQuestion = async () => {
     if (questions.length < 5) {
+      const optionsWithCorrectAnswer = options.map((opt) => ({
+        ...opt,
+        isCorrect: opt.seq === correctAnswer,
+      }));
+
       const question = {
         questionText,
         intervalTime,
         selectedOption,
-        options,
+        options: optionsWithCorrectAnswer,
         seq: currentQuestion.length + 1,
       };
       setQuestions([...questions, question]);
@@ -62,6 +96,11 @@ function CreateQuestionContent({
         const newQuestion = prev.length + 1;
         return [...prev, newQuestion];
       });
+      setCorrectAnswers((prevCorrectAnswers) => [
+        ...prevCorrectAnswers,
+        correctAnswer,
+      ]);
+      setCorrectAnswer(null);
       handleReset();
     } else {
       alert("Maximum limit of 5 questions reached.");
@@ -69,8 +108,12 @@ function CreateQuestionContent({
   };
 
   const handleReset = () => {
+    console.log("Resetting form values");
     setQuestionText("");
+
     setIntervalTime(0);
+    setOptionText("");
+    setOptionImage("");
     setSelectedOption("text");
     setOptions([
       { seq: 1, isCorrect: false },
@@ -83,12 +126,17 @@ function CreateQuestionContent({
     currentQuestionObject.questionText = questionText;
     currentQuestionObject.intervalTime = intervalTime;
     currentQuestionObject.selectedOption = selectedOption;
-    currentQuestionObject.options = options;
+    const optionsWithCorrectAnswer = options.map((opt) => ({
+      ...opt,
+      isCorrect: opt.seq === correctAnswer,
+    }));
+
+    currentQuestionObject.options = optionsWithCorrectAnswer;
 
     const newQuestions = [...questions];
     newQuestions[selectQuestion - 1] = currentQuestionObject;
     setQuestions(newQuestions);
-  }, [questionText, intervalTime, selectedOption, options]);
+  }, [questionText, intervalTime, selectedOption, options, correctAnswer]);
 
   const handleDeleteQuestion = (id) => {
     if (questions.length <= 1) {
@@ -112,8 +160,18 @@ function CreateQuestionContent({
       return newQuestions;
     });
   };
+
   const handleQuestionClick = (questionNum) => {
     setSelectQuestion(questionNum);
+    const currentQuestionObject = [...questions.reverse()][questionNum - 1];
+    setQuestionText(currentQuestionObject.questionText);
+    setOptions(currentQuestionObject.options);
+    setIntervalTime(currentQuestionObject.intervalTime);
+    setSelectedOption(currentQuestionObject.selectedOption);
+    const correctAnswerForQuestion = correctAnswers[questionNum - 1];
+    setCorrectAnswer(correctAnswerForQuestion);
+    console.log(currentQuestionObject);
+    console.log(questionNum);
   };
 
   const handleCreateQuizAndContinue = async () => {
@@ -122,23 +180,42 @@ function CreateQuestionContent({
     const token = localStorage.getItem("userToken");
     await axios.post(
       `${BACKEND_URL}/questions`,
-      {
-        text: questionText,
-        options,
-        timer: intervalTime,
-        selectedOption,
-        quizId,
-      },
+      { questions, quizId },
       {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
+    //  setOptionImage("")
+    //  setOptionText("")
+    //setQuestions("");
+
+    setCurrentQuestion([1]);
+    handleReset();
   };
+
+  useEffect(() => {
+    const getQuestions = async () => {
+      const token = localStorage.getItem("userToken");
+      const res = await axios.get(
+        `${BACKEND_URL}/questions/${quizId}`,
+        // { questions, quizId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log(res.data);
+      setQuestions(res.data);
+      // setCurrentQuestion([1]);
+      setCurrentQuestion([1]);
+    };
+
+    if (quizId) getQuestions();
+  }, [quizId]);
 
   if (!isOpen) {
     return null;
   }
-
+  console.log(quizId);
   console.log(questions);
 
   return (
@@ -242,10 +319,25 @@ function CreateQuestionContent({
                         <>
                           <div className="q-option1">
                             <input
+                              type="radio"
+                              name={`correctAnswer-${selectQuestion}`}
+                              checked={correctAnswer === opt.seq}
+                              onChange={() => {
+                                console.log("Setting correct answer:", opt.seq);
+                                setCorrectAnswer(opt.seq);
+                              }}
+                            />
+                            <input
                               type="text"
                               placeholder="Text"
                               className="q-option-input"
+                              value={opt.optionText}
+                              onChange={(e) => {
+                                setOptionText(e.target.value);
+                                opt.optionText = e.target.value;
+                              }}
                             />
+
                             {ind > 1 && (
                               <span
                                 onClick={handleDeleteOption.bind(null, opt.seq)}
@@ -277,9 +369,24 @@ function CreateQuestionContent({
                         <>
                           <div className="q-option1">
                             <input
+                              type="radio"
+                              name={`correctAnswer-${selectQuestion}`}
+                              checked={correctAnswer === opt.seq}
+                              onChange={() => {
+                                console.log("Setting correct answer:", opt.seq);
+                                setCorrectAnswer(opt.seq);
+                              }}
+                            />
+
+                            <input
                               type="text"
                               placeholder="Image Url"
                               className="q-option-input"
+                              value={opt.optionImage}
+                              onChange={(e) => {
+                                setOptionImage(e.target.value);
+                                opt.optionImage = e.target.value;
+                              }}
                             />
                             {ind > 1 && (
                               <span
@@ -312,14 +419,34 @@ function CreateQuestionContent({
                         <>
                           <div className="q-option1">
                             <input
+                              type="radio"
+                              name={`correctAnswer-${selectQuestion}`}
+                              checked={correctAnswer === opt.seq}
+                              onChange={() => {
+                                console.log("Setting correct answer:", opt.seq);
+                                setCorrectAnswer(opt.seq);
+                              }}
+                            />
+
+                            <input
                               type="text"
                               placeholder="Text"
                               className="q-option-input"
+                              value={opt.optionText}
+                              onChange={(e) => {
+                                setOptionText(e.target.value);
+                                opt.optionText = e.target.value;
+                              }}
                             />
                             <input
                               type="text"
                               placeholder="Image Url"
                               className="q-option-input"
+                              value={opt.optionImage}
+                              onChange={(e) => {
+                                setOptionImage(e.target.value);
+                                opt.optionImage = e.target.value;
+                              }}
                             />
                             {ind > 1 && (
                               <span
@@ -362,9 +489,30 @@ function CreateQuestionContent({
                 {quizType === "Q&A" && (
                   <div className="q-timer">
                     <div className="q-timer-text">Timer</div>
-                    <button onClick={() => setIntervalTime(0)}>Off</button>
-                    <button onClick={() => setIntervalTime(5)}>5 sec</button>
-                    <button onClick={() => setIntervalTime(10)}>10 sec</button>
+                    <button
+                      onClick={() => setIntervalTime(0)}
+                      className={`${
+                        intervalTime === 0 && "q-timer-wrap-active "
+                      }`}
+                    >
+                      Off
+                    </button>
+                    <button
+                      onClick={() => setIntervalTime(5)}
+                      className={`${
+                        intervalTime === 5 && "q-timer-wrap-active "
+                      }`}
+                    >
+                      5 sec
+                    </button>
+                    <button
+                      onClick={() => setIntervalTime(10)}
+                      className={`${
+                        intervalTime === 10 && "q-timer-wrap-active "
+                      }`}
+                    >
+                      10 sec
+                    </button>
                   </div>
                 )}
               </div>

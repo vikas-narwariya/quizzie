@@ -22,8 +22,6 @@ function Sidebar() {
   const [isCreateQuizOpen, setCreateQuizOpen] = useState(false);
   const [quizId, setQuizId] = useState("");
 
-  const handleDelete = (quizId) => {};
-
   const handleOpenModal = () => {
     setIsModalOpen(true);
   };
@@ -65,11 +63,7 @@ function Sidebar() {
           <button className="sidebar-button" onClick={navigateToDashboard}>
             Dashboard
           </button>
-          <button
-            className="sidebar-button"
-            onClick={navigateToAnalytics}
-            onDelete={handleDelete}
-          >
+          <button className="sidebar-button" onClick={navigateToAnalytics}>
             Analytics
           </button>
           <button className="sidebar-button" onClick={handleOpenModal}>
@@ -77,7 +71,6 @@ function Sidebar() {
           </button>
           <CreateQuizContent
             isOpen={isModalOpen}
-            onDelete={handleDelete}
             onClose={handleCloseModal}
             selectQuizType={handleSelectQuizType}
             handleCreateQuestion={handleCreateQuestionOpenModal}

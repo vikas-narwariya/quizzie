@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 import { Route, Routes, Navigate, Outlet, useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ import LoginSignup from "./pages/LoginSignup";
 import QuestionWise from "./pages/QuestionWise";
 import QuizScreen from "./components/QuizScreen";
 import { isAuthenticated } from "./utils/auth";
+import QuizAnalytics from "./pages/QuizAnalytics";
 
 function PrivateRoute({ element, redirectTo }) {
   const navigate = useNavigate();
@@ -40,7 +42,7 @@ function App() {
         />
         <Route
           path="/analytics/:quizId"
-          element={<PrivateRoute element={<QuestionWise />} />}
+          element={<PrivateRoute element={<QuizAnalytics />} />}
         />
         <Route
           path="/create-quiz"
